@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { getAuthSession } from "@/lib/nextauth";
 
 export const runtime = "nodejs";
@@ -14,6 +13,25 @@ export async function GET(req: NextRequest) {
   const TAKE = 20;
   const SKIP = (page - 1) * TAKE;
 
+  const from = req.nextUrl.searchParams.get("from");
+  const to = req.nextUrl.searchParams.get("to");
+
+  let dateFilter: any = {};
+
+  if (from || to) {
+    dateFilter.date = {};
+
+    if (from) {
+      dateFilter.date.gte = new Date(from);
+    }
+
+    if (to) {
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999); // include full day
+      dateFilter.date.lte = endDate;
+    }
+  }
+
   const userId = session.user.id;
 
   const [latestBalanceTx, creditAgg, debitAgg] = await Promise.all([
@@ -21,6 +39,7 @@ export async function GET(req: NextRequest) {
       where: {
         statement: { userId },
         balance: { not: null },
+        ...dateFilter,
       },
       orderBy: { date: "desc" },
       select: { balance: true },
@@ -30,6 +49,7 @@ export async function GET(req: NextRequest) {
       where: {
         statement: { userId },
         type: "CREDIT",
+        ...dateFilter,
       },
       _sum: { amount: true },
     }),
@@ -38,6 +58,7 @@ export async function GET(req: NextRequest) {
       where: {
         statement: { userId },
         type: "DEBIT",
+        ...dateFilter,
       },
       _sum: { amount: true },
     }),
@@ -53,6 +74,7 @@ export async function GET(req: NextRequest) {
     where: {
       statement: { userId },
       balance: { not: null },
+      ...dateFilter,
     },
     orderBy: { date: "asc" },
     select: {
@@ -65,6 +87,7 @@ export async function GET(req: NextRequest) {
     by: ["statementId"],
     where: {
       statement: { userId },
+      ...dateFilter,
     },
     _count: true,
   });
@@ -94,6 +117,7 @@ export async function GET(req: NextRequest) {
     where: {
       statement: { userId },
       type: "CREDIT",
+      ...dateFilter,
     },
     orderBy: { amount: "desc" },
     take: 10,
@@ -109,6 +133,7 @@ export async function GET(req: NextRequest) {
     where: {
       statement: { userId },
       type: "DEBIT",
+      ...dateFilter,
     },
     orderBy: { amount: "desc" },
     take: 10,
@@ -123,6 +148,7 @@ export async function GET(req: NextRequest) {
   const transactions = await prisma.transaction.findMany({
     where: {
       statement: { userId },
+      ...dateFilter,
     },
     orderBy: { date: "desc" },
     skip: SKIP,

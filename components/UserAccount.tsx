@@ -39,7 +39,13 @@ const UserAccount = ({ user }: Props) => {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={"/"}>Stuff</Link>
+          <Link href={"/dashboard"}>Dashboard</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={"/upload"}>Upload Statement</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={"/statements"}>My Statements</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

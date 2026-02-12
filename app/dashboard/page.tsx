@@ -2,6 +2,7 @@
 
 import BalanceOverTime from "@/components/dashboard/BalanceOverTime";
 import BankWise from "@/components/dashboard/BankWise";
+import Filters from "@/components/dashboard/Filters";
 import TopCards from "@/components/dashboard/TopCards";
 import TopTable from "@/components/dashboard/TopTable";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +24,6 @@ import {
 } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 
-// ---------------- types ----------------
-
 type Transaction = {
   id: string;
   date: string;
@@ -35,8 +34,6 @@ type Transaction = {
   bankName: string;
 };
 
-// ---------------- dashboard ----------------
-
 export default function Dashboard() {
   const [summary, setSummary] = useState<any>(null);
   const [balanceSeries, setBalanceSeries] = useState<any[]>([]);
@@ -46,8 +43,20 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [page, setPage] = useState(1);
 
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+  const [appliedFrom, setAppliedFrom] = useState<string>("");
+  const [appliedTo, setAppliedTo] = useState<string>("");
+
   useEffect(() => {
-    fetch(`/api/dashboard?page=${page}`)
+    const params = new URLSearchParams({
+      page: page.toString(),
+    });
+
+    if (appliedFrom) params.append("from", appliedFrom);
+    if (appliedTo) params.append("to", appliedTo);
+
+    fetch(`/api/dashboard?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setSummary(data.summary);
@@ -57,27 +66,38 @@ export default function Dashboard() {
         setTopDebits(data.topDebits);
         setTransactions(data.transactions);
       });
-  }, [page]);
+  }, [page, appliedFrom, appliedTo]);
+
+  const applyFilters = () => {
+    setPage(1); // reset pagination
+    setAppliedFrom(fromDate);
+    setAppliedTo(toDate);
+  };
 
   if (!summary) return <div className="p-10">Loading dashboard…</div>;
 
   return (
     <div className="p-8 space-y-8 bg-muted min-h-screen">
+      <Filters
+        fromDate={fromDate}
+        toDate={toDate}
+        setFromDate={setFromDate}
+        setToDate={setToDate}
+        applyFilters={applyFilters}
+      />
+
       <TopCards summary={summary} />
 
-      {/* CHARTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <BalanceOverTime balanceSeries={balanceSeries} />
         <BankWise bankSplit={bankSplit} />
       </div>
 
-      {/* TOP TABLES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TopTable title="Top 10 Credits" rows={topCredits} positive />
         <TopTable title="Top 10 Debits" rows={topDebits} />
       </div>
 
-      {/* ALL TRANSACTIONS */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
