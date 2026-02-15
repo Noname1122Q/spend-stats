@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SpendStats
 
-## Getting Started
+SpendStats is a full-stack financial analytics platform that converts unstructured bank statement PDFs into structured transaction data and visualizes actionable financial insights.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The system processes uploaded bank statement PDFs entirely on the backend. Raw transaction data is extracted using `pdf2json`, then passed to the Groq API for full transaction structuring. Structured records are stored in a normalized relational schema and exposed via REST APIs for analytical rendering.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- PDF parsing performed server-side using pdf2json
+- Full transaction structuring via Groq LLM API
+- Normalized schema: Users → Statements → Transactions
+- Secure multi-user isolation via OAuth authentication
+- Analytical dashboards built over structured transaction queries
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Core Capabilities
 
-## Learn More
+- End-to-end PDF ingestion and processing pipeline
+- LLM-driven financial data structuring
+- Multi-tenant architecture
+- Transaction categorization, filtering, and CRUD operations
+- Scalable relational storage using PostgreSQL
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+SpendStats focuses on reliable backend processing and structured financial data modeling rather than simple file parsing or UI rendering.
