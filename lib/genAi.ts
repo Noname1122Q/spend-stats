@@ -8,9 +8,15 @@ const client = new OpenAI({
 export async function callLLM(prompt: string) {
   const res = await client.chat.completions.create({
     model: "llama-3.1-8b-instant", // fast + free
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: "You extract structured financial data." },
+      { role: "user", content: prompt },
+    ],
+    response_format: { type: "json_object" },
     temperature: 0,
   });
 
-  return res.choices[0].message.content!;
+  const structured = JSON.parse(res.choices[0].message.content!);
+
+  return structured;
 }

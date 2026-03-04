@@ -1,8 +1,9 @@
 export const runtime = "nodejs";
-import { callLLM } from "@/lib/genAi";
+
 import { getAuthSession } from "@/lib/nextauth";
 import prisma from "@/lib/prisma";
 import PDFParser from "pdf2json";
+import { callLLM } from "@/lib/genAi";
 
 function extractText(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -34,39 +35,41 @@ export async function POST(req: Request) {
 
   const rawText = await extractText(buffer);
 
-  /* ---------------- TEXT → GEMINI ---------------- */
+  /* ---------------- TEXT → OPENAI (JSON MODE) ---------------- */
 
   const prompt = `
-    You are a bank statement parser.
+You are a bank statement parser.
 
-    Convert the following text into STRICT JSON ONLY.
-    Make sure to only return JSON output.
+Extract structured data from the following bank statement text.
 
-    Schema:
+Return ONLY valid JSON.
+Do not include markdown.
+Do not include explanations.
+
+Schema:
+{
+  "bankName": string,
+  "periodFrom": string | null,
+  "periodTo": string | null,
+  "transactions": [
     {
-    bankName: string,
-    periodFrom: ISO date,
-    periodTo: ISO date,
-    transactions: [
-        {
-        date: ISO date,
-        description: string,
-        amount: number,
-        balance: number | null,
-        type: "CREDIT" | "DEBIT",
-        reference: string | null
-        }
-    ]
+      "date": string,
+      "description": string,
+      "amount": number,
+      "balance": number | null,
+      "type": "CREDIT" | "DEBIT",
+      "reference": string | null
     }
+  ]
+}
 
-    ${rawText}
-    `;
+Bank Statement Text:
+${rawText}
+`;
 
-  const raw = await callLLM(prompt);
+  const structured = await callLLM(prompt);
 
-  const structured = JSON.parse(raw.replace(/```json|```/g, ""));
-
-  //   /* ---------------- SAVE TO DB ---------------- */
+  /* ---------------- SAVE TO DB ---------------- */
 
   const statement = await prisma.bankStatement.create({
     data: {
